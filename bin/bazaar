@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BAZAAR_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+CMD="${1:-help}"
+shift 2>/dev/null || true
+
+SCRIPT="$BAZAAR_DIR/bin/bazaar-$CMD"
+
+if [ -x "$SCRIPT" ]; then
+  exec "$SCRIPT" "$@"
+elif [ "$CMD" = "help" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ]; then
+  echo "Bazaar — GitHub-native AI Skill Marketplace"
+  echo ""
+  echo "Usage: bazaar <command> [args]"
+  echo ""
+  echo "Discovery:"
+  echo "  search <query> [limit]    Search skills on GitHub"
+  echo "  feed [limit] [tag]        Browse latest skills"
+  echo "  view <owner/repo>         Read a skill's SKILL.md"
+  echo ""
+  echo "Install:"
+  echo "  install <owner/repo>      Install a skill locally"
+  echo "  uninstall <name>          Remove installed skill"
+  echo "  list                      List installed skills"
+  echo ""
+  echo "Social:"
+  echo "  follow <user>             Follow a skill publisher"
+  echo "  unfollow <user>           Unfollow a publisher"
+  echo "  following                 List followed publishers"
+  echo "  notifications [limit]     Check new skills from followed users"
+  echo ""
+  echo "Publish:"
+  echo "  publish <path> [--tags x] Publish a skill to GitHub"
+  echo ""
+  echo "Remix:"
+  echo "  steal <url>               Generate skill scaffold from URL"
+  echo ""
+  echo "Config:"
+  echo "  config <get|set> <key> [value]"
+  echo ""
+  echo "Version: $(cat "$BAZAAR_DIR/VERSION")"
+else
+  echo "bazaar: unknown command '$CMD'"
+  echo "Run 'bazaar help' for usage."
+  exit 1
+fi

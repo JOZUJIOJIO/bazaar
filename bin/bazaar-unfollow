@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+USER="${1:?Usage: bazaar unfollow <github-username>}"
+FOLLOWED_FILE="$HOME/.bazaar/followed.yaml"
+
+if [ ! -f "$FOLLOWED_FILE" ]; then
+  echo "Not following anyone."
+  exit 1
+fi
+
+if ! grep -q "login: $USER" "$FOLLOWED_FILE" 2>/dev/null; then
+  echo "Not following $USER"
+  exit 1
+fi
+
+TMP=$(mktemp)
+awk -v user="$USER" '
+  /^  - login:/ { if ($3 == user) { skip=1; next } else { skip=0 } }
+  skip && /^    / { next }
+  { print }
+' "$FOLLOWED_FILE" > "$TMP"
+mv "$TMP" "$FOLLOWED_FILE"
+
+echo "Unfollowed $USER"

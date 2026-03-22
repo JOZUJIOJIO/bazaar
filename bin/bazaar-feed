@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LIMIT="${1:-5}"
+TAG="${2:-}"
+
+ARGS=(--topic claude-skill --sort updated --limit "$LIMIT"
+  --json fullName,description,updatedAt,stargazersCount,url)
+
+if [ -n "$TAG" ]; then
+  ARGS+=(--topic "$TAG")
+fi
+
+gh search repos "" "${ARGS[@]}" \
+  --template '{{range .}}{{.fullName}} ★{{.stargazersCount}} ({{timeago .updatedAt}})
+  {{.description}}
+  {{.url}}
+{{end}}'

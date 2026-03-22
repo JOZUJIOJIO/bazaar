@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+URL="${1:?Usage: bazaar steal <url>}"
+
+echo "Fetching: $URL"
+echo "---"
+
+# Fetch content (first 5000 chars for Claude to process)
+curl -sL "$URL" | head -c 5000
+
+echo ""
+echo "---"
+echo "Content fetched. Claude will now generate a skill scaffold from this content."
+echo "Use the skill-template at ~/.claude/skills/bazaar/templates/skill-template.md as the base."

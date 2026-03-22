@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SKILL_NAME="${1:?Usage: bazaar uninstall <skill-name>}"
+BAZAAR_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+INSTALL_ROOT=$("$BAZAAR_DIR/bin/bazaar-config" get install_root 2>/dev/null || echo "$HOME/.claude/skills")
+TARGET="$INSTALL_ROOT/$SKILL_NAME"
+INSTALLED_FILE="$HOME/.bazaar/installed.yaml"
+
+if [ ! -d "$TARGET" ]; then
+  echo "Not found: $TARGET"
+  exit 1
+fi
+
+rm -rf "$TARGET"
+
+# Remove from installed.yaml (simple grep-based removal)
+if [ -f "$INSTALLED_FILE" ]; then
+  TMP=$(mktemp)
+  awk -v name="$SKILL_NAME" '
+    /^  - name:/ { if ($3 == name) { skip=1; next } else { skip=0 } }
+    skip && /^    / { next }
+    { print }
+  ' "$INSTALLED_FILE" > "$TMP"
+  mv "$TMP" "$INSTALLED_FILE"
+fi
+
+echo "Uninstalled $SKILL_NAME"

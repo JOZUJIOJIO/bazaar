@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+QUERY="${1:?Usage: bazaar search <query> [limit]}"
+LIMIT="${2:-5}"
+
+gh search repos "$QUERY" --topic claude-skill --sort updated --limit "$LIMIT" \
+  --json fullName,description,updatedAt,stargazersCount,url \
+  --template '{{range .}}{{.fullName}} ★{{.stargazersCount}} ({{timeago .updatedAt}})
+  {{.description}}
+  {{.url}}
+{{end}}'

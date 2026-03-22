@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+USER="${1:?Usage: bazaar follow <github-username>}"
+FOLLOWED_FILE="$HOME/.bazaar/followed.yaml"
+
+# Verify user exists
+gh api "users/$USER" --jq '.login' >/dev/null 2>&1 || { echo "User not found: $USER"; exit 1; }
+
+mkdir -p "$HOME/.bazaar"
+if [ ! -f "$FOLLOWED_FILE" ]; then
+  echo "users:" > "$FOLLOWED_FILE"
+fi
+
+# Check if already following
+if grep -q "login: $USER" "$FOLLOWED_FILE" 2>/dev/null; then
+  echo "Already following $USER"
+  exit 0
+fi
+
+cat >> "$FOLLOWED_FILE" <<EOF
+  - login: $USER
+    since: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    last_checked: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+EOF
+
+echo "Now following $USER"

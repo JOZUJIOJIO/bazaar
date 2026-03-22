@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+INSTALLED_FILE="$HOME/.bazaar/installed.yaml"
+
+if [ ! -f "$INSTALLED_FILE" ]; then
+  echo "No skills installed via Bazaar."
+  exit 0
+fi
+
+# Parse and display
+awk '/^  - name:/ { name=$3 }
+     /^    repo:/ { repo=$2 }
+     /^    installed_at:/ { date=$2 }
+     /^    path:/ { path=$2; printf "%-20s %-30s %s\n", name, repo, date }
+' "$INSTALLED_FILE"

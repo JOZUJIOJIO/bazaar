@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SKILL_DIR="${1:?Usage: bazaar publish <path-to-skill> [--tags tag1,tag2]}"
+BAZAAR_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+TAGS=""
+
+# Parse --tags
+shift
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --tags) TAGS="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+# Validate
+if [ ! -f "$SKILL_DIR/SKILL.md" ]; then
+  echo "Error: $SKILL_DIR/SKILL.md not found"
+  exit 1
+fi
+
+# Extract name from frontmatter
+SKILL_NAME=$(grep -E "^name:" "$SKILL_DIR/SKILL.md" | head -1 | awk '{print $2}')
+if [ -z "$SKILL_NAME" ]; then
+  SKILL_NAME=$(basename "$SKILL_DIR")
+fi
+
+HANDLE=$("$BAZAAR_DIR/bin/bazaar-config" get handle 2>/dev/null || gh api user --jq '.login')
+
+# Extract description
+DESC=$(grep -E "^description:" "$SKILL_DIR/SKILL.md" | head -1 | sed 's/^description: *//')
+
+echo "Publishing $SKILL_NAME from $SKILL_DIR ..."
+
+# Check if repo exists
+if gh repo view "$HANDLE/$SKILL_NAME" >/dev/null 2>&1; then
+  echo "Repo $HANDLE/$SKILL_NAME exists. Pushing updates..."
+  cd "$SKILL_DIR"
+  if [ ! -d .git ]; then
+    git init
+    git remote add origin "https://github.com/$HANDLE/$SKILL_NAME.git"
+  fi
+  git add -A
+  git commit -m "Update via Bazaar publish" 2>/dev/null || echo "No changes to commit"
+  git push -u origin main 2>/dev/null || git push -u origin master
+else
+  echo "Creating repo $HANDLE/$SKILL_NAME ..."
+  gh repo create "$SKILL_NAME" --public --description "$DESC" --clone=false
+
+  cd "$SKILL_DIR"
+  git init
+  git add -A
+  git commit -m "Initial publish via Bazaar"
+  git remote add origin "https://github.com/$HANDLE/$SKILL_NAME.git"
+  git branch -M main
+  git push -u origin main
+fi
+
+# Set topics
+TOPIC_LIST="claude-skill"
+if [ -n "$TAGS" ]; then
+  TOPIC_LIST="$TOPIC_LIST,$TAGS"
+fi
+
+# Build JSON array
+TOPIC_JSON=$(echo "$TOPIC_LIST" | tr ',' '\n' | sed 's/.*/"&"/' | paste -sd, -)
+gh api "repos/$HANDLE/$SKILL_NAME/topics" -X PUT --input - <<EOF
+{"names": [$TOPIC_JSON]}
+EOF
+
+echo ""
+echo "Published: https://github.com/$HANDLE/$SKILL_NAME"
+echo "Topics: $TOPIC_LIST"

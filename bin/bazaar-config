@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG_DIR="$HOME/.bazaar"
+CONFIG_FILE="$CONFIG_DIR/config.yaml"
+
+mkdir -p "$CONFIG_DIR"
+
+# Initialize config if missing
+if [ ! -f "$CONFIG_FILE" ]; then
+  HANDLE=$(gh api user --jq '.login' 2>/dev/null || echo "")
+  cat > "$CONFIG_FILE" <<EOF
+handle: $HANDLE
+install_root: $HOME/.claude/skills
+EOF
+fi
+
+ACTION="${1:-show}"
+KEY="${2:-}"
+VALUE="${3:-}"
+
+case "$ACTION" in
+  get)
+    if [ -z "$KEY" ]; then
+      echo "Usage: bazaar config get <key>" >&2
+      exit 1
+    fi
+    grep -E "^${KEY}:" "$CONFIG_FILE" | sed "s/^${KEY}: *//" | sed 's/^"//' | sed 's/"$//'
+    ;;
+  set)
+    if [ -z "$KEY" ] || [ -z "$VALUE" ]; then
+      echo "Usage: bazaar config set <key> <value>" >&2
+      exit 1
+    fi
+    if grep -qE "^${KEY}:" "$CONFIG_FILE" 2>/dev/null; then
+      sed -i '' "s|^${KEY}:.*|${KEY}: ${VALUE}|" "$CONFIG_FILE"
+    else
+      echo "${KEY}: ${VALUE}" >> "$CONFIG_FILE"
+    fi
+    echo "$VALUE"
+    ;;
+  show)
+    cat "$CONFIG_FILE"
+    ;;
+  *)
+    echo "Usage: bazaar config <get|set|show> [key] [value]" >&2
+    exit 1
+    ;;
+esac

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO="${1:?Usage: bazaar view <owner/repo>}"
+
+# Try SKILL.md first, fall back to README.md
+CONTENT=$(gh api "repos/$REPO/contents/SKILL.md" --jq '.content' 2>/dev/null || true)
+
+if [ -n "$CONTENT" ] && [ "$CONTENT" != "null" ]; then
+  echo "=== SKILL.md ==="
+  echo "$CONTENT" | base64 --decode
+else
+  CONTENT=$(gh api "repos/$REPO/contents/README.md" --jq '.content' 2>/dev/null || true)
+  if [ -n "$CONTENT" ] && [ "$CONTENT" != "null" ]; then
+    echo "=== README.md (no SKILL.md found) ==="
+    echo "$CONTENT" | base64 --decode
+  else
+    echo "No SKILL.md or README.md found in $REPO"
+    exit 1
+  fi
+fi
+
+echo ""
+echo "---"
+TOPICS=$(gh api "repos/$REPO/topics" --jq '.names | join(", ")' 2>/dev/null || echo "none")
+STARS=$(gh repo view "$REPO" --json stargazerCount --jq '.stargazerCount' 2>/dev/null || echo "?")
+echo "Topics: $TOPICS"
+echo "Stars: $STARS"

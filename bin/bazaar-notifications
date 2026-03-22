@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LIMIT="${1:-5}"
+FOLLOWED_FILE="$HOME/.bazaar/followed.yaml"
+
+if [ ! -f "$FOLLOWED_FILE" ]; then
+  echo "Not following anyone. Use 'bazaar follow <user>' first."
+  exit 0
+fi
+
+# Get list of followed users
+USERS=$(awk '/^  - login:/ { print $3 }' "$FOLLOWED_FILE")
+
+if [ -z "$USERS" ]; then
+  echo "Not following anyone."
+  exit 0
+fi
+
+FOUND=0
+for USER in $USERS; do
+  RESULTS=$(gh search repos "user:$USER" --topic claude-skill --sort updated --limit "$LIMIT" \
+    --json fullName,description,updatedAt 2>/dev/null || true)
+
+  if [ -n "$RESULTS" ] && [ "$RESULTS" != "[]" ]; then
+    echo "$RESULTS" | python3 -c "
+import json, sys
+items = json.load(sys.stdin)
+for item in items:
+    print(f\"  {item['fullName']} ({item.get('updatedAt','')[:10]})\")
+    if item.get('description'):
+        print(f\"    {item['description']}\")
+" 2>/dev/null || true
+    FOUND=1
+  fi
+done
+
+if [ "$FOUND" = "0" ]; then
+  echo "No new skills from followed users."
+fi

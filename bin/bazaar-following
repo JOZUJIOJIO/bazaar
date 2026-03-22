@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+FOLLOWED_FILE="$HOME/.bazaar/followed.yaml"
+
+if [ ! -f "$FOLLOWED_FILE" ]; then
+  echo "Not following anyone."
+  exit 0
+fi
+
+awk '/^  - login:/ { printf "%s\n", $3 }' "$FOLLOWED_FILE"

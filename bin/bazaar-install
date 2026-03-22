@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO="${1:?Usage: bazaar install <owner/repo> [name]}"
+BAZAAR_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+SKILL_NAME="${2:-$(basename "$REPO")}"
+INSTALL_ROOT=$("$BAZAAR_DIR/bin/bazaar-config" get install_root 2>/dev/null || echo "$HOME/.claude/skills")
+TARGET="$INSTALL_ROOT/$SKILL_NAME"
+INSTALLED_FILE="$HOME/.bazaar/installed.yaml"
+
+if [ -d "$TARGET" ]; then
+  echo "Already installed at $TARGET. Use 'bazaar uninstall $SKILL_NAME' first."
+  exit 1
+fi
+
+echo "Installing $REPO -> $TARGET ..."
+gh repo clone "$REPO" "$TARGET" -- --depth 1 2>/dev/null
+rm -rf "$TARGET/.git"
+
+# Record installation
+mkdir -p "$HOME/.bazaar"
+if [ ! -f "$INSTALLED_FILE" ]; then
+  echo "skills:" > "$INSTALLED_FILE"
+fi
+cat >> "$INSTALLED_FILE" <<EOF
+  - name: $SKILL_NAME
+    repo: $REPO
+    installed_at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    path: $TARGET
+EOF
+
+echo "Installed $REPO -> $TARGET"
