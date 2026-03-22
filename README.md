@@ -1,164 +1,163 @@
 # Bazaar
 
-**GitHub-native skill marketplace for AI agents.**
+**给 AI Agent 用的 GitHub 原生技能市场。**
 
-No backend. No invite code. No npm package. Just `gh` CLI.
+不需要后端。不需要邀请码。不需要装 npm 包。只要有 `gh` CLI 就行。
 
 ---
 
-## The Problem
+## 为什么做这个？
 
-AI agents need skills — reusable workflows, MCP servers, automation scripts. But today's skill marketplaces all require:
+AI Agent 需要技能——可复用的工作流、MCP 服务器、自动化脚本。但现在的技能市场都要求你：
 
-- A custom backend server you have to trust
-- An invite code you have to beg for
-- An npm package that adds another dependency
-- An account on yet another platform
+- 信任一个第三方后端服务器
+- 求人要一个邀请码
+- 装一个 npm 包增加依赖
+- 在又一个平台注册账号
 
-Your skills live on GitHub already. Why does discovery need a middleman?
+你的技能本来就在 GitHub 上。为什么发现和分发还需要中间商？
 
-## The Solution
+## 解决方案
 
-Bazaar turns GitHub into a skill marketplace using one simple convention:
+Bazaar 用一个极简约定把 GitHub 变成技能市场：
 
-> **Any repo with the topic `claude-skill` is a discoverable skill.**
+> **任何打了 `claude-skill` topic 的 repo，就是一个可发现的技能。**
 
-That's it. No new platform. No new account. No new dependency. If you have `gh` CLI installed and authenticated — you already have Bazaar.
+没了。不需要新平台、新账号、新依赖。你的 `gh` CLI 已经登录了——Bazaar 已经可以用了。
 
-## What You Can Do
+## 你能做什么
 
-| Command | What It Does |
-|---------|-------------|
-| `bazaar search "scraping"` | Find skills across all of GitHub |
-| `bazaar feed` | Browse the latest published skills |
-| `bazaar view owner/repo` | Read a skill's full SKILL.md remotely |
-| `bazaar install owner/repo` | One command install into `~/.claude/skills/` |
-| `bazaar publish ./my-skill` | Publish your skill to GitHub with proper topics |
-| `bazaar follow username` | Track a skill publisher's new releases |
-| `bazaar notifications` | See what followed publishers shipped recently |
-| `bazaar steal <url>` | Turn any webpage into a skill scaffold |
+| 命令 | 做什么 |
+|------|--------|
+| `bazaar search "爬虫"` | 在整个 GitHub 搜索技能 |
+| `bazaar feed` | 浏览最新发布的技能 |
+| `bazaar view owner/repo` | 远程读取一个技能的完整 SKILL.md |
+| `bazaar install owner/repo` | 一条命令安装到 `~/.claude/skills/` |
+| `bazaar publish ./my-skill` | 把你的技能发布到 GitHub |
+| `bazaar follow username` | 关注一个技能发布者 |
+| `bazaar notifications` | 查看关注的人最近发了什么 |
+| `bazaar steal <url>` | 把任何网页变成技能脚手架 |
 
-## Why Bazaar Over Alternatives
+## 为什么选 Bazaar
 
-| | Bazaar | Taste | SkillsMP | Manual GitHub |
+| | Bazaar | Taste | SkillsMP | 手动 GitHub |
 |---|---|---|---|---|
-| Backend required | No | Yes | Yes | No |
-| Account/invite | No | Yes | Yes | No |
-| npm dependency | No | Yes | Yes | No |
-| Search | `gh` search API | Custom API | Custom API | Manual browse |
-| Install | One command | One command | One command | Manual clone |
-| Publish | One command | One command | Web upload | Manual setup |
-| Social (follow) | Local tracking | Server-side | Server-side | None |
-| Notifications | Per-user check | Push | Push | None |
-| Offline capable | Yes | No | No | Yes |
-| Data ownership | 100% yours | Platform owns | Platform owns | 100% yours |
+| 需要后端 | 不需要 | 需要 | 需要 | 不需要 |
+| 需要账号/邀请码 | 不需要 | 需要 | 需要 | 不需要 |
+| npm 依赖 | 无 | 有 | 有 | 无 |
+| 搜索 | `gh` 搜索 API | 自建 API | 自建 API | 手动浏览 |
+| 安装 | 一条命令 | 一条命令 | 一条命令 | 手动 clone |
+| 发布 | 一条命令 | 一条命令 | 网页上传 | 手动配置 |
+| 社交（关注） | 本地追踪 | 服务端 | 服务端 | 无 |
+| 离线可用 | 是 | 否 | 否 | 是 |
+| 数据归属 | 100% 你的 | 平台的 | 平台的 | 100% 你的 |
 
-## Quick Start
+## 快速上手
 
-### 1. Verify `gh` is ready
+### 1. 确认 `gh` 已登录
 
 ```bash
 gh auth status
 ```
 
-### 2. Search for skills
+### 2. 搜索技能
 
 ```bash
 bazaar search "browser automation"
 ```
 
-### 3. Install one
+### 3. 安装一个
 
 ```bash
 bazaar install oaustegard/claude-skills
 ```
 
-### 4. Publish your own
+### 4. 发布你自己的
 
 ```bash
 bazaar publish ./my-awesome-skill --tags automation,workflow
 ```
 
-Done. Your skill is now discoverable by every Bazaar user on the planet.
+搞定。你的技能现在全球可搜。
 
-## How It Works Under the Hood
+## 工作原理
 
 ```
-You                          GitHub
- |                             |
- |  bazaar search "X"          |
- |  ───────────────────────>   |  gh search repos --topic claude-skill
- |                             |
- |  bazaar install user/repo   |
- |  ───────────────────────>   |  gh repo clone (depth 1)
- |                             |  strip .git → pure skill folder
- |                             |
- |  bazaar publish ./skill     |
- |  ───────────────────────>   |  gh repo create + set topics
- |                             |  git push
- |                             |
- |  bazaar follow user         |
- |  (local ~/.bazaar/)         |  No API call needed
- |                             |
- |  bazaar notifications       |
- |  ───────────────────────>   |  gh search repos user:X --topic claude-skill
+你                            GitHub
+ |                              |
+ |  bazaar search "X"           |
+ |  ────────────────────────>   |  gh search repos --topic claude-skill
+ |                              |
+ |  bazaar install user/repo    |
+ |  ────────────────────────>   |  gh repo clone (depth 1)
+ |                              |  去掉 .git → 纯技能目录
+ |                              |
+ |  bazaar publish ./skill      |
+ |  ────────────────────────>   |  gh repo create + 设置 topic
+ |                              |  git push
+ |                              |
+ |  bazaar follow user          |
+ |  (本地 ~/.bazaar/)           |  不需要 API 调用
+ |                              |
+ |  bazaar notifications        |
+ |  ────────────────────────>   |  gh search repos user:X --topic claude-skill
 ```
 
-No middleware. No proxy. No third-party server touching your data.
+没有中间件。没有代理。没有第三方服务器碰你的数据。
 
-## Publishing Convention
+## 发布约定
 
-To make your skill discoverable, just add the GitHub topic `claude-skill` to your repo. That's the only requirement.
+让你的技能被发现，只需要给 GitHub repo 加上 `claude-skill` topic。就这一个要求。
 
-Recommended repo structure:
+推荐的 repo 结构：
 
 ```
 my-skill/
-├── SKILL.md          # Required — main instructions with YAML frontmatter
-├── references/       # Optional — deeper documentation
-├── templates/        # Optional — reusable templates
-└── scripts/          # Optional — helper automation
+├── SKILL.md          # 必须 — 主指令文件，带 YAML frontmatter
+├── references/       # 可选 — 深度文档
+├── templates/        # 可选 — 可复用模板
+└── scripts/          # 可选 — 辅助脚本
 ```
 
-SKILL.md frontmatter:
+SKILL.md 头部格式：
 
 ```yaml
 ---
 name: my-skill-name
-description: What it does and when to use it.
+description: 这个技能做什么，什么时候用。
 ---
 ```
 
-## Steal → Remix → Publish
+## 偷师 → 改造 → 发布
 
-See a useful workflow on someone's blog? Turn it into a skill:
+看到别人博客上的好方法？变成技能：
 
 ```bash
 bazaar steal https://example.com/cool-workflow
-# Claude reads the content, generates a skill scaffold
-# You refine it, then:
+# Claude 读取内容，生成技能脚手架
+# 你修改完善，然后：
 bazaar publish ./new-skill --tags automation
 ```
 
-Add credit: `<!-- remixed from https://original-source -->`
+标注出处：`<!-- remixed from https://original-source -->`
 
-## Philosophy
+## 设计哲学
 
-- **GitHub is the backend.** Don't build what already exists.
-- **Topics are the protocol.** One tag (`claude-skill`) = universal discovery.
-- **Local-first.** Follow lists, install registry — all on your machine.
-- **Zero trust required.** No platform owns your data or your distribution.
-- **Convention over infrastructure.** A shared naming convention beats a custom API.
+- **GitHub 就是后端。** 已经存在的东西不要重复造。
+- **Topic 就是协议。** 一个标签（`claude-skill`）= 全球可发现。
+- **本地优先。** 关注列表、安装记录——全在你自己机器上。
+- **零信任依赖。** 没有平台拥有你的数据或你的分发渠道。
+- **约定大于基建。** 一个共享命名约定胜过一套自建 API。
 
-## Requirements
+## 系统要求
 
-- `gh` CLI installed and authenticated
-- That's it.
+- `gh` CLI 已安装并登录
+- 没了。
 
-## Version
+## 版本
 
-0.1.0 — Initial release.
+0.1.0 — 首次发布。
 
 ---
 
-*Built for agents who believe the best marketplace is the one that doesn't need a server.*
+*为那些相信「最好的市场不需要服务器」的 Agent 而造。*
