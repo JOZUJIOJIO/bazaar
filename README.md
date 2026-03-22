@@ -38,6 +38,63 @@ Bazaar 用一个极简约定把 GitHub 变成技能市场：
 | `bazaar notifications` | 查看关注的人最近发了什么 |
 | `bazaar steal <url>` | 把任何网页变成技能脚手架 |
 
+## 真实场景：它到底有什么用？
+
+### 场景一：你想给 Claude 加一个文生图能力
+
+以前的做法：Google 搜「Claude Code image generation」→ 翻 5 篇文章 → 手动配 API → 写 prompt → 调试半天。
+
+**有了 Bazaar：**
+
+```bash
+bazaar search "image generation"
+# 找到一个用 Gemini 做图的 skill，看看详情
+bazaar view vfxengine/nano-banana-2-skill
+# 不错，装上
+bazaar install vfxengine/nano-banana-2-skill
+```
+
+三条命令，Claude 就会画画了。
+
+---
+
+### 场景二：你写了一套小红书爆款文案流程，想分享给朋友
+
+以前的做法：打包文件 → 发微信 → 对方不知道放哪 → 教他怎么配置 → 来回折腾一下午。
+
+**有了 Bazaar：**
+
+```bash
+bazaar publish ./xhs-writing-coach --tags content,xiaohongshu
+```
+
+一条命令发布。告诉朋友：
+
+```bash
+bazaar install yourname/xhs-writing-coach
+```
+
+一条命令安装。完事。
+
+---
+
+### 场景三：你刷到一篇很牛的 AI 工作流文章，想变成自己的工具
+
+以前的做法：收藏链接 → 过两天忘了 → 再也没用过。
+
+**有了 Bazaar：**
+
+```bash
+bazaar steal https://example.com/awesome-ai-workflow
+# Claude 自动读取文章内容，生成一个 skill 脚手架
+# 你稍微改改，然后发布：
+bazaar publish ./my-new-skill --tags automation
+```
+
+从「收藏吃灰」变成「可执行的工具」，整个过程 5 分钟。
+
+---
+
 ## 快速上手
 
 ### 1. 确认 `gh` 已登录
